@@ -33,10 +33,10 @@ public class AssetManager {
                 if (is != null) {
                     imageCache.put(imageName, ImageIO.read(is));
                 } else {
-                    System.err.println("Không tìm thấy ảnh: " + imageName);
+                    System.err.println("Not found image: " + imageName);
                 }
             } catch (Exception e) {
-                System.err.println("Lỗi khi đọc ảnh " + imageName + ": " + e.getMessage());
+                System.err.println("Cannot read image" + imageName + ": " + e.getMessage());
             }
         }
         return imageCache.get(imageName);
@@ -53,7 +53,7 @@ public class AssetManager {
         try {
             InputStream is = getClass().getResourceAsStream("/maps/" + mapName + ".txt");
             if (is == null) {
-                System.err.println("Không tìm thấy file map: " + mapName);
+                System.err.println("Not found file map: " + mapName);
                 return null;
             }
 
@@ -85,7 +85,7 @@ public class AssetManager {
             return mapData;
 
         } catch (Exception e) {
-            System.err.println("Lỗi khi đọc map " + mapName + ": " + e.getMessage());
+            System.err.println("Error! Read Map " + mapName + ": " + e.getMessage());
             return null;
         }
     }
