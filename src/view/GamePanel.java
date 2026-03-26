@@ -1,10 +1,8 @@
 package view;
 
-import model.GameModel;
-import model.Map;
-import model.Ghost;
-import model.PacMan;
+import model.*;
 import utils.AssetManager;
+import utils.SoundManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,19 +10,11 @@ import java.awt.image.BufferedImage;
 
 public class GamePanel extends JPanel {
     private GameModel gameModel;
+    private final Font titleFont = new Font("Arial", Font.BOLD, 40);
 
     public GamePanel(GameModel gameModel) {
         this.gameModel = gameModel;
-        Map map = gameModel.getMap();
-
-        if (map != null && map.getGrid() != null) {
-            int width = map.getCols() * GameModel.TILE_SIZE;
-            int height = map.getRows() * GameModel.TILE_SIZE;
-            this.setPreferredSize(new Dimension(width, height));
-        } else {
-            this.setPreferredSize(new Dimension(800, 600));
-        }
-
+        this.setPreferredSize(new Dimension(608, 672));
         this.setBackground(Color.BLACK);
     }
 
@@ -32,10 +22,106 @@ public class GamePanel extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        drawMap(g);
+        GameState state = gameModel.getCurrentState();
 
-        drawEntities(g);
+        switch (state) {
+            case MAIN_MENU:
+                drawMainMenu(g);
+                break;
+
+            case QUIT_CONFIRM:
+                drawMainMenu(g); // Vẽ menu mờ phía sau
+                drawOverlay(g, 200);
+                drawQuitConfirm(g);
+                break;
+
+            case PLAYING:
+                drawGame(g);
+                break;
+
+            case PAUSED:
+                drawGame(g);
+                drawOverlay(g, 150); // Phủ lớp mờ lên game đang chơi
+                drawPauseMenu(g);
+                break;
+
+            case CONTROLS:
+                g.setColor(Color.WHITE);
+                g.setFont(titleFont);
+                g.drawString("Di chuyển bằng các phím mũi tên", 150, 300);
+                g.drawString("Nhấn BACKSPACE để quay lại", 150, 350);
+                break;
+
+            case LEVEL_SELECT:
+                g.setColor(Color.WHITE);
+                g.setFont(titleFont);
+                g.drawString("Chọn Level (Sắp ra mắt)", 250, 300);
+                g.drawString("Nhấn ENTER để chơi luôn", 250, 350);
+                g.drawString("Nhấn BACKSPACE để quay lại", 250, 400);
+                break;
+
+            case SETTINGS:
+                g.setColor(Color.WHITE);
+                g.setFont(new Font("Arial", Font.BOLD, 40));
+                g.drawString("SETTINGS", 300, 150);
+
+                for (MenuButton btn : gameModel.getSettingsButtons()) {
+                    btn.draw(g);
+                }
+
+                // Hiển thị trạng thái ON/OFF hiện tại
+                g.setFont(new Font("Arial", Font.BOLD, 25));
+                String soundStatus = SoundManager.getInstance().isMuted() ? "OFF" : "ON";
+                g.drawString("Sound: " + soundStatus, 340, 230);
+                break;
+        }
     }
+
+    private void drawOverlay(Graphics g, int alpha) {
+        g.setColor(new Color(0, 0, 0, alpha));
+        g.fillRect(0, 0, getWidth(), getHeight());
+    }
+
+    private void drawMainMenu(Graphics g) {
+        for (MenuButton btn : gameModel.getMainMenuButtons()) {
+            btn.draw(g);
+        }
+    }
+
+    private void drawPauseMenu(Graphics g) {
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.BOLD, 40));
+        g.drawString("PAUSED", 220, 150);
+        for (MenuButton btn : gameModel.getPauseButtons()) {
+            btn.draw(g);
+        }
+    }
+
+    private void drawQuitConfirm(Graphics g) {
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.BOLD, 30));
+        g.drawString("Bạn chắc chắn muốn thoát game chứ?", 60, 200);
+        for (MenuButton btn : gameModel.getQuitConfirmButtons()) {
+            btn.draw(g);
+        }
+    }
+
+    private void drawGame(Graphics g) {
+        drawMap(g);
+        drawEntities(g);
+
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.BOLD, 20));
+        g.drawString("Score: " + gameModel.getScore(), 10, 25);
+
+        if (gameModel.isGameOver()) {
+            drawOverlay(g, 150);
+            g.setColor(Color.RED);
+            g.setFont(new Font("Arial", Font.BOLD, 50));
+            g.drawString("GAME OVER", 170, 300);
+        }
+    }
+
 
     private void drawMap(Graphics g) {
         Map map = gameModel.getMap();

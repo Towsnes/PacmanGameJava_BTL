@@ -55,6 +55,9 @@ public class PacMan {
 
     public int getX() { return x; }
     public int getY() { return y; }
+    public int getDx() { return dx; }
+    public int getDy() { return dy; }
+    public int getSpeed() { return speed; }
 
     public BufferedImage getCurrentImage() {
         return currentImage;
