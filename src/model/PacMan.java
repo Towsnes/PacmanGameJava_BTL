@@ -5,8 +5,6 @@ import utils.AssetManager;
 import java.awt.image.BufferedImage;
 
 public class PacMan {
-    private int startX;
-    private int startY;
     private int x;
     private int y;
     private int dx;
@@ -23,8 +21,6 @@ public class PacMan {
     public PacMan(int x, int y) {
         this.x = x;
         this.y = y;
-        this.startX = x;
-        this.startY = y;
         this.speed = 2;
         this.dx = 0;
         this.dy = 0;
@@ -55,11 +51,6 @@ public class PacMan {
         } else if (dy == 1) {
             this.currentImage = this.imageDown;
         }
-    }
-
-    public void reset(){
-        this.x = this.startX;
-        this.y = this.startY;
     }
 
     public int getX() { return x; }

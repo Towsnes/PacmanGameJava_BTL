@@ -8,6 +8,7 @@ public class SoundManager {
     private static SoundManager instance;
     private HashMap<String, Clip> soundCache;
     private boolean isMuted = false;
+    private java.util.Set<String> loopingClips = new java.util.HashSet<>();
 
     private SoundManager() {
         soundCache = new HashMap<>();
@@ -20,18 +21,17 @@ public class SoundManager {
         return instance;
     }
 
-    // Tải file âm thanh (.wav)
-    public void loadSound(String soundName, String filePath) {
+    public void loadSound(String soundName) {
         if (!soundCache.containsKey(soundName)) {
             try {
-                InputStream is = getClass().getResourceAsStream(filePath);
+                InputStream is = getClass().getResourceAsStream("/sounds/" + soundName);
                 if (is != null) {
                     AudioInputStream ais = AudioSystem.getAudioInputStream(is);
                     Clip clip = AudioSystem.getClip();
                     clip.open(ais);
                     soundCache.put(soundName, clip);
                 } else {
-                    System.err.println("Không tìm thấy file âm thanh: " + filePath);
+                    System.err.println("Không tìm thấy file âm thanh: " + soundName);
                 }
             } catch (Exception e) {
                 System.err.println("Lỗi load âm thanh " + soundName + ": " + e.getMessage());
@@ -43,19 +43,19 @@ public class SoundManager {
         if (isMuted) return;
         Clip clip = soundCache.get(soundName);
         if (clip != null) {
+            if (clip.isRunning()) {
+                clip.stop();
+            }
             clip.setFramePosition(0);
             clip.start();
         }
     }
 
-    // Phát nhạc nền lặp đi lặp lại
     public void loopSound(String soundName) {
+        loopingClips.add(soundName);
         if (isMuted) return;
-
         Clip clip = soundCache.get(soundName);
-        if (clip != null) {
-            clip.loop(Clip.LOOP_CONTINUOUSLY);
-        }
+        if (clip != null) clip.loop(Clip.LOOP_CONTINUOUSLY);
     }
 
     public void stopSound(String soundName) {
@@ -72,6 +72,13 @@ public class SoundManager {
         if (isMuted) {
             for (Clip clip : soundCache.values()) {
                 if (clip.isRunning()) clip.stop();
+            }
+        } else {
+            for (String name : loopingClips) {
+                Clip clip = soundCache.get(name);
+                if (clip != null && !clip.isRunning()) {
+                    clip.loop(Clip.LOOP_CONTINUOUSLY);
+                }
             }
         }
     }

@@ -6,26 +6,34 @@ import view.GamePanel;
 import view.GameWindow;
 
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 
-public class GameController implements  Runnable, KeyListener, MouseListener {
+public class GameController implements Runnable {
     private GameModel model;
     private GamePanel viewPanel;
     private GameWindow window;
-    private Map crmap = new Map("level1");
+    private String crmap = "level1";
+    private SoundManager sound;
 
     private Thread gameThread;
     private boolean isRunning = false;
     private final int FPS = 60;
 
+    private final java.util.Random random = new java.util.Random();
+
     public GameController() {
         model = new GameModel();
 
+        sound = SoundManager.getInstance();
+        sound.loadSound("eat.wav");
+        sound.loadSound("background.wav");
+
         viewPanel = new GamePanel(model);
-        viewPanel.addKeyListener(this);
-        viewPanel.addMouseListener(this);
+
+        // Tích hợp InputHandler
+        InputHandler inputHandler = new InputHandler(this);
+        viewPanel.addKeyListener(inputHandler.getKeyListener());
+        viewPanel.addMouseListener(inputHandler.getMouseListener());
+
         viewPanel.setFocusable(true);
         viewPanel.requestFocusInWindow();
 
@@ -126,6 +134,7 @@ public class GameController implements  Runnable, KeyListener, MouseListener {
             if (pacmanBounds.intersects(item.getBounds())) {
                 model.addScore(item.getScoreValue());
                 iterator.remove();
+                sound.playSound("eat.wav");
             }
         }
     }
@@ -146,6 +155,8 @@ public class GameController implements  Runnable, KeyListener, MouseListener {
         java.util.ArrayList<int[]> validMoves = new java.util.ArrayList<>();
 
         for (int[] dir : directions) {
+            if (dir[0] == -ghost.getDx() && dir[1] == -ghost.getDy()) continue;
+
             int testX = ghost.getX() + dir[0] * ghost.getSpeed();
             int testY = ghost.getY() + dir[1] * ghost.getSpeed();
 
@@ -153,18 +164,48 @@ public class GameController implements  Runnable, KeyListener, MouseListener {
                 validMoves.add(dir);
             }
         }
+        
+        if (validMoves.isEmpty()) {
+            ghost.setDirection(-ghost.getDx(), -ghost.getDy());
+            return;
+        }
 
-        if (!validMoves.isEmpty()) {
-            java.util.Random rand = new java.util.Random();
-            int[] chosenDir = validMoves.get(rand.nextInt(validMoves.size()));
-            ghost.setDirection(chosenDir[0], chosenDir[1]);
+        int[] chosenDir = validMoves.get(random.nextInt(validMoves.size()));
+        ghost.setDirection(chosenDir[0], chosenDir[1]);
+    }
+
+    private void checkGhostCollision() {
+        PacMan pacman = model.getPacman();
+        if (pacman == null || model.getGhosts() == null) return;
+
+        int size = GameModel.TILE_SIZE;
+
+        java.awt.Rectangle pacmanBounds = new java.awt.Rectangle(
+                pacman.getX() + 4, pacman.getY() + 4, size - 8, size - 8
+        );
+
+        for (model.Ghost ghost : model.getGhosts()) {
+            java.awt.Rectangle ghostBounds = new java.awt.Rectangle(
+                    ghost.getX() + 4, ghost.getY() + 4, size - 8, size - 8
+            );
+
+            if (pacmanBounds.intersects(ghostBounds)) {
+                model.setGameOver(true);
+                break;
+            }
         }
     }
 
-    @Override
-    public void mousePressed(MouseEvent e) {
-        int mx = e.getX();
-        int my = e.getY();
+    private void startLevel(String levelName) {
+        this.crmap = levelName;
+        model.setMap(new Map(levelName));
+        model.setGameOver(false);
+        model.setCurrentState(GameState.PLAYING);
+        sound.loopSound("background.wav");
+    }
+
+    // Phương thức công khai được gọi từ InputHandler để xử lý click chuột
+    public void handleMousePress(int mx, int my) {
         GameState state = model.getCurrentState();
 
         if (state == GameState.MAIN_MENU) {
@@ -173,8 +214,13 @@ public class GameController implements  Runnable, KeyListener, MouseListener {
                     handleButtonClick(btn.getActionCommand());
                 }
             }
-        }
-        else if (state == GameState.START) {
+        } else if (state == GameState.PLAYING) {
+            for (MenuButton btn : model.getGamePlayButtons()) {
+                if (btn.isClicked(mx, my)) {
+                    handleButtonClick(btn.getActionCommand());
+                }
+            }
+        } else if (state == GameState.START) {
             for (MenuButton btn: model.getStartButtons()){
                 if (btn.isClicked(mx,my)){
                     handleButtonClick(btn.getActionCommand());
@@ -202,18 +248,50 @@ public class GameController implements  Runnable, KeyListener, MouseListener {
                 }
             }
         } else if (state == GameState.CONTROLS) {
-            MenuButton btn= model.getControlsButtons();
+            MenuButton btn = model.getControlsButtons();
             if(btn.isClicked(mx,my)){
                 handleButtonClick(btn.getActionCommand());
             }
         }
     }
 
-    private void startLevel(String levelName) {
-        crmap.setCurrentLevel(levelName);
-        model.setMap(new Map(levelName));
-        model.setGameOver(false);
-        model.setCurrentState(GameState.PLAYING);
+    // Phim tat
+    public void handleKeyPress(int key) {
+        GameState state = model.getCurrentState();
+
+        // ESC: Pause/Resume
+        if (key == java.awt.event.KeyEvent.VK_ESCAPE) {
+            if (state == GameState.PLAYING) {
+                model.setCurrentState(GameState.PAUSED);
+            } else if (state == GameState.PAUSED) {
+                model.setCurrentState(GameState.PLAYING);
+            }
+        }
+
+        // Settings : Q
+        if (key == KeyEvent.VK_Q){
+            if (state == GameState.PLAYING){
+                model.setCurrentState(GameState.SETTINGS);
+            }else if (state == GameState.SETTINGS){
+                model.setCurrentState(GameState.PLAYING);
+            }
+        }
+
+        // move Pacman
+        if (state == GameState.PLAYING) {
+            PacMan pacman = model.getPacman();
+            if (pacman == null) return;
+
+            if (key == java.awt.event.KeyEvent.VK_UP || key == java.awt.event.KeyEvent.VK_W) {
+                pacman.setDirection(0, -1);
+            } else if (key == java.awt.event.KeyEvent.VK_DOWN || key == java.awt.event.KeyEvent.VK_S) {
+                pacman.setDirection(0, 1);
+            } else if (key == java.awt.event.KeyEvent.VK_LEFT || key == java.awt.event.KeyEvent.VK_A) {
+                pacman.setDirection(-1, 0);
+            } else if (key == java.awt.event.KeyEvent.VK_RIGHT || key == java.awt.event.KeyEvent.VK_D) {
+                pacman.setDirection(1, 0);
+            }
+        }
     }
 
     private void handleButtonClick(String command) {
@@ -223,6 +301,9 @@ public class GameController implements  Runnable, KeyListener, MouseListener {
                 break;
             case "CONTROLS":
                 model.setCurrentState(GameState.CONTROLS);
+                break;
+            case "PAUSED":
+                model.setCurrentState(GameState.PAUSED);
                 break;
             case "SETTINGS":
                 model.setCurrentState(GameState.SETTINGS);
@@ -240,7 +321,7 @@ public class GameController implements  Runnable, KeyListener, MouseListener {
                 model.setCurrentState(GameState.PLAYING);
                 break;
             case "RESTART":
-                model.resetGame(crmap.getCurrentLevel());
+                startLevel(this.crmap);
                 model.setCurrentState(GameState.PLAYING);
                 break;
             case "MENU":
@@ -279,74 +360,6 @@ public class GameController implements  Runnable, KeyListener, MouseListener {
             case "LEVEL9":
                 startLevel("level3");
                 break;
-        }
-    }
-
-    @Override
-    public void keyPressed(KeyEvent e) {
-        int key = e.getKeyCode();
-        GameState state = model.getCurrentState();
-
-        // ESC: Pause/Resume
-        if (key == KeyEvent.VK_ESCAPE) {
-            if (state == GameState.PLAYING) {
-                model.setCurrentState(GameState.PAUSED);
-            } else if (state == GameState.PAUSED) {
-                model.setCurrentState(GameState.PLAYING);
-            }
-        }
-
-        // Phím phụ để test các màn hình chưa có ảnh tĩnh (Level select, Controls)
-        if (key == KeyEvent.VK_BACK_SPACE) {
-            if (state == GameState.START || state == GameState.CONTROLS) {
-                model.setCurrentState(GameState.MAIN_MENU);
-            }
-        }
-
-        // move Pacman
-        if (state == GameState.PLAYING) {
-            PacMan pacman = model.getPacman();
-            if (pacman == null) return;
-
-            if (key == KeyEvent.VK_UP || key == KeyEvent.VK_W) {
-                pacman.setDirection(0, -1);
-            } else if (key == KeyEvent.VK_DOWN || key == KeyEvent.VK_S) {
-                pacman.setDirection(0, 1);
-            } else if (key == KeyEvent.VK_LEFT || key == KeyEvent.VK_A) {
-                pacman.setDirection(-1, 0);
-            } else if (key == KeyEvent.VK_RIGHT || key == KeyEvent.VK_D) {
-                pacman.setDirection(1, 0);
-            }
-        }
-    }
-
-    // Các hàm trống của MouseListener
-    @Override public void mouseClicked(MouseEvent e) {}
-    @Override public void mouseReleased(MouseEvent e) {}
-    @Override public void mouseEntered(MouseEvent e) {}
-    @Override public void mouseExited(MouseEvent e) {}
-    @Override public void keyTyped(KeyEvent e) {}
-    @Override public void keyReleased(KeyEvent e) {}
-
-    private void checkGhostCollision() {
-        PacMan pacman = model.getPacman();
-        if (pacman == null || model.getGhosts() == null) return;
-
-        int size = GameModel.TILE_SIZE;
-
-        java.awt.Rectangle pacmanBounds = new java.awt.Rectangle(
-                pacman.getX() + 4, pacman.getY() + 4, size - 8, size - 8
-        );
-
-        for (model.Ghost ghost : model.getGhosts()) {
-            java.awt.Rectangle ghostBounds = new java.awt.Rectangle(
-                    ghost.getX() + 4, ghost.getY() + 4, size - 8, size - 8
-            );
-
-            if (pacmanBounds.intersects(ghostBounds)) {
-                model.setGameOver(true);
-                break;
-            }
         }
     }
 }

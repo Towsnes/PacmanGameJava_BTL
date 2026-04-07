@@ -11,10 +11,12 @@ import java.awt.image.BufferedImage;
 public class GamePanel extends JPanel {
     private GameModel gameModel;
     private final Font titleFont = new Font("Arial", Font.BOLD, 40);
+    public static final int PANEL_WIDTH = 608;
+    public static final int PANEL_HEIGHT = 672;
 
     public GamePanel(GameModel gameModel) {
         this.gameModel = gameModel;
-        this.setPreferredSize(new Dimension(608, 672));
+        this.setPreferredSize(new Dimension(PANEL_WIDTH, PANEL_HEIGHT));
         this.setBackground(Color.BLACK);
     }
 
@@ -26,26 +28,28 @@ public class GamePanel extends JPanel {
 
         switch (state) {
             case MAIN_MENU:
+                drawBackground(g, "bg_menu");
                 drawMainMenu(g);
                 break;
-
             case QUIT_CONFIRM:
+                drawBackground(g, "bg_menu");
                 drawMainMenu(g);
                 drawOverlay(g, 200);
                 drawQuitConfirm(g);
                 break;
-
             case PLAYING:
+                drawBackground(g, "bg_playing");
                 drawGame(g);
                 break;
-
             case PAUSED:
+                drawBackground(g, "bg_playing");
                 drawGame(g);
                 drawOverlay(g, 150);
+                drawBackground(g, "bg_pause");
                 drawPauseMenu(g);
                 break;
-
             case CONTROLS:
+                drawBackground(g, "bg_controls");
                 g.setColor(Color.WHITE);
                 g.setFont(new Font("Arial", Font.BOLD, 30));
                 g.drawString("Di chuyển bằng các phím mũi tên", 63, 300);
@@ -55,12 +59,14 @@ public class GamePanel extends JPanel {
                 break;
 
             case START:
+                drawBackground(g, "bg_start");
                 g.setColor(Color.WHITE);
                 g.setFont(titleFont);
                 drawStartMenu(g);
                 break;
 
             case SETTINGS:
+                drawBackground(g, "bg_settings");
                 g.setColor(Color.WHITE);
                 g.setFont(new Font("Arial", Font.BOLD, 40));
                 g.drawString("SETTINGS", 200, 150);
@@ -74,6 +80,16 @@ public class GamePanel extends JPanel {
                 String soundStatus = SoundManager.getInstance().isMuted() ? "OFF" : "ON";
                 g.drawString("Sound: " + soundStatus, 225, 230);
                 break;
+        }
+    }
+
+    private void drawBackground(Graphics g, String imageName) {
+        BufferedImage bg = AssetManager.getInstance().getImage(imageName);
+        if (bg != null) {
+            g.drawImage(bg, 0, 0, PANEL_WIDTH, PANEL_HEIGHT, null);
+        } else {
+            g.setColor(Color.BLACK);
+            g.fillRect(0, 0, PANEL_WIDTH, PANEL_HEIGHT);
         }
     }
 
@@ -112,6 +128,11 @@ public class GamePanel extends JPanel {
         }
     }
 
+    private void drawGamePlay (Graphics g){
+        for (MenuButton btn: gameModel.getGamePlayButtons()){
+            btn.draw(g);
+        }
+    }
 
     private void drawGame(Graphics g) {
         drawMap(g);
@@ -120,6 +141,7 @@ public class GamePanel extends JPanel {
         g.setColor(Color.WHITE);
         g.setFont(new Font("Arial", Font.BOLD, 20));
         g.drawString("Score: " + gameModel.getScore(), 10, 25);
+        drawGamePlay(g);
 
         if (gameModel.isGameOver()) {
             drawOverlay(g, 150);
