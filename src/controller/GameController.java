@@ -72,7 +72,7 @@ public class GameController implements Runnable {
             return;
         }
 
-        if (model.isGameOver()) {
+        if (model.isGameOver() || model.isGameWon()) {
             return;
         }
 
@@ -94,6 +94,7 @@ public class GameController implements Runnable {
         }
 
         checkGhostCollision();
+        checkWinCondition();
     }
 
     private boolean canMove(int nextX, int nextY) {
@@ -196,10 +197,17 @@ public class GameController implements Runnable {
         }
     }
 
+    private void checkWinCondition() {
+        if (model.getItems().isEmpty()) {
+            model.setGameWon(true);
+        }
+    }
+
     private void startLevel(String levelName) {
         this.crmap = levelName;
         model.setMap(new Map(levelName));
         model.setGameOver(false);
+        model.setGameWon(false);
         model.setCurrentState(GameState.PLAYING);
         sound.loopSound("background.wav");
     }
@@ -215,6 +223,24 @@ public class GameController implements Runnable {
                 }
             }
         } else if (state == GameState.PLAYING) {
+            if (model.isGameOver()) {
+                for (MenuButton btn : model.getGameOverButtons()) {
+                    if (btn.isClicked(mx, my)) {
+                        handleButtonClick(btn.getActionCommand());
+                    }
+                }
+                return;
+            }
+
+            if (model.isGameWon()) {
+                for (MenuButton btn : model.getGameWonButtons()) {
+                    if (btn.isClicked(mx, my)) {
+                        handleButtonClick(btn.getActionCommand());
+                    }
+                }
+                return;
+            }
+
             for (MenuButton btn : model.getGamePlayButtons()) {
                 if (btn.isClicked(mx, my)) {
                     handleButtonClick(btn.getActionCommand());
@@ -294,6 +320,18 @@ public class GameController implements Runnable {
         }
     }
 
+    private void goToNextLevel() {
+        String nextLevel;
+        switch (crmap) {
+            case "leveltest": nextLevel = "level2"; break;
+            case "level1":    nextLevel = "level2"; break;
+            case "level2":    nextLevel = "level3"; break;
+            case "level3":    nextLevel = "level1"; break;
+            default:          nextLevel = "level1"; break;
+        }
+        startLevel(nextLevel);
+    }
+
     private void handleButtonClick(String command) {
         switch (command) {
             case "PLAY":
@@ -334,7 +372,7 @@ public class GameController implements Runnable {
                 model.setCurrentState(GameState.MAIN_MENU);
                 break;
             case "LEVEL1":
-                startLevel("level1");
+                startLevel("leveltest");
                 break;
             case "LEVEL2":
                 startLevel("level2");
@@ -359,6 +397,9 @@ public class GameController implements Runnable {
                 break;
             case "LEVEL9":
                 startLevel("level3");
+                break;
+            case "NEXT_LEVEL":
+                goToNextLevel();
                 break;
         }
     }

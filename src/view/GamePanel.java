@@ -32,28 +32,20 @@ public class GamePanel extends JPanel {
                 drawMainMenu(g);
                 break;
             case QUIT_CONFIRM:
-                drawBackground(g, "bg_menu");
-                drawMainMenu(g);
-                drawOverlay(g, 200);
+                drawBackground(g, "bg_quit");
                 drawQuitConfirm(g);
                 break;
             case PLAYING:
-                drawBackground(g, "bg_playing");
                 drawGame(g);
                 break;
             case PAUSED:
-                drawBackground(g, "bg_playing");
-                drawGame(g);
-                drawOverlay(g, 150);
+//                drawOverlay(g, 150);
                 drawBackground(g, "bg_pause");
                 drawPauseMenu(g);
                 break;
             case CONTROLS:
                 drawBackground(g, "bg_controls");
                 g.setColor(Color.WHITE);
-                g.setFont(new Font("Arial", Font.BOLD, 30));
-                g.drawString("Di chuyển bằng các phím mũi tên", 63, 300);
-                g.drawString("Nhấn BACKSPACE để quay lại", 63, 350);
                 MenuButton btncl = gameModel.getControlsButtons();
                 btncl.draw(g);
                 break;
@@ -67,19 +59,23 @@ public class GamePanel extends JPanel {
 
             case SETTINGS:
                 drawBackground(g, "bg_settings");
-                g.setColor(Color.WHITE);
-                g.setFont(new Font("Arial", Font.BOLD, 40));
-                g.drawString("SETTINGS", 200, 150);
-
                 for (MenuButton btn : gameModel.getSettingsButtons()) {
                     btn.draw(g);
                 }
-
                 // Sound ON/OFF hiện tại
-                g.setFont(new Font("Arial", Font.BOLD, 25));
-                String soundStatus = SoundManager.getInstance().isMuted() ? "OFF" : "ON";
-                g.drawString("Sound: " + soundStatus, 225, 230);
+                String soundStatus = SoundManager.getInstance().isMuted() ? "sound_off" : "sound_on";
+                drawSoundStatus(g,soundStatus);
                 break;
+        }
+    }
+
+    private void drawSoundStatus(Graphics g, String soundStatus) {
+        BufferedImage bg = AssetManager.getInstance().getImage(soundStatus);
+        if (bg != null) {
+            g.drawImage(bg, 472, 285, 128, 152, null);
+        } else {
+            g.setColor(Color.BLACK);
+            g.fillRect(0, 0, getWidth(), getHeight());
         }
     }
 
@@ -120,9 +116,7 @@ public class GamePanel extends JPanel {
     }
 
     private void drawQuitConfirm(Graphics g) {
-        g.setColor(Color.WHITE);
-        g.setFont(new Font("Arial", Font.BOLD, 30));
-        g.drawString("Bạn chắc chắn muốn thoát game chứ?", 30, 200);
+
         for (MenuButton btn : gameModel.getQuitConfirmButtons()) {
             btn.draw(g);
         }
@@ -145,9 +139,50 @@ public class GamePanel extends JPanel {
 
         if (gameModel.isGameOver()) {
             drawOverlay(g, 150);
-            g.setColor(Color.RED);
-            g.setFont(new Font("Arial", Font.BOLD, 50));
-            g.drawString("GAME OVER", 170, 300);
+            BufferedImage bgGameOver = AssetManager.getInstance().getImage("bg_gameover");
+            if (bgGameOver != null) {
+                g.drawImage(bgGameOver, 22, 126, 564, 420, null);
+            }
+            drawGameOverScreen(g);
+        }
+
+        if (gameModel.isGameWon()) {
+            drawOverlay(g, 150);
+            BufferedImage bgGameWon = AssetManager.getInstance().getImage("bg_gamewon");
+            if (bgGameWon != null){
+                g.drawImage(bgGameWon, 40, 150, 538, 372, null);
+            }
+            drawGameWonScreen(g);
+        }
+    }
+
+    private void drawGameOverScreen(Graphics g) {
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.BOLD, 25));
+        String score = "" + gameModel.getScore();
+
+        FontMetrics fm = g.getFontMetrics();
+        int x = (getWidth() - fm.stringWidth(score)) / 2;
+
+        g.drawString(score, x, 326);
+
+        for (MenuButton btn : gameModel.getGameOverButtons()) {
+            btn.draw(g);
+        }
+    }
+
+    private void drawGameWonScreen(Graphics g) {
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.BOLD, 25));
+        String score = "" + gameModel.getScore();
+
+        FontMetrics fm = g.getFontMetrics();
+        int x = (getWidth() - fm.stringWidth(score)) / 2;
+
+        g.drawString(score, x, 328);
+
+        for (MenuButton btn : gameModel.getGameWonButtons()) {
+            btn.draw(g);
         }
     }
 
