@@ -16,6 +16,7 @@ public class GameController implements Runnable {
     private String crmap = "level1";
     private SoundManager sound;
     private GameState previousState = null;
+    private GameState stateBeforeSettings = null;
 
     private Thread gameThread;
     private boolean isRunning = false;
@@ -484,10 +485,16 @@ public class GameController implements Runnable {
 
         // ESC: Pause/Resume
         if (key == java.awt.event.KeyEvent.VK_ESCAPE) {
+            stateBeforeSettings = GameState.PLAYING;
             if (state == GameState.PLAYING) {
                 model.setCurrentState(GameState.PAUSED);
             } else if (state == GameState.PAUSED) {
-                model.setCurrentState(GameState.PLAYING);
+                if (stateBeforeSettings == GameState.PLAYING) {
+                    model.setCurrentState(GameState.PLAYING);
+                } else {
+                    model.setCurrentState(GameState.MAIN_MENU);
+                }
+                stateBeforeSettings = null;
             }
         }
 
@@ -607,6 +614,7 @@ public class GameController implements Runnable {
                 model.setCurrentState(GameState.PAUSED);
                 break;
             case "SETTINGS":
+                stateBeforeSettings = model.getCurrentState();
                 model.setCurrentState(GameState.SETTINGS);
                 break;
             case "QUIT":
@@ -651,7 +659,12 @@ public class GameController implements Runnable {
                 SoundManager.getInstance().toggleMute();
                 break;
             case "BACK_TO_MENU":
-                model.setCurrentState(GameState.MAIN_MENU);
+                if (stateBeforeSettings == GameState.PLAYING) {
+                    model.setCurrentState(GameState.PLAYING);
+                } else {
+                    model.setCurrentState(GameState.MAIN_MENU);
+                }
+                stateBeforeSettings = null;
                 break;
             case "LEVEL1": handleLevelSelection(1); break;
             case "LEVEL2": handleLevelSelection(2); break;

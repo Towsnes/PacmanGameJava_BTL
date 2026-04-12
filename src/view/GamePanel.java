@@ -204,9 +204,6 @@ public class GamePanel extends JPanel {
     }
 
     private void drawPauseMenu(Graphics g) {
-        g.setColor(Color.WHITE);
-        g.setFont(new Font("Arial", Font.BOLD, 40));
-        g.drawString("PAUSED", 220, 150);
         for (MenuButton btn : gameModel.getPauseButtons()) {
             btn.draw(g);
         }
