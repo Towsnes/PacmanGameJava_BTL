@@ -35,9 +35,6 @@ public class InputHandler {
         };
     }
 
-    /**
-     * Listener cho sự kiện di chuột (hover).
-     */
     public MouseMotionAdapter getMouseMotionListener() {
         return new MouseMotionAdapter() {
             @Override

@@ -112,18 +112,19 @@ public class GameController implements Runnable {
     }
 
     private boolean canMove(int nextX, int nextY) {
-        int tileSize = GameModel.TILE_SIZE;
+        int tileSize = 32;
         int offset = 2;
 
-        int leftCol = (nextX + offset) / tileSize;
-        int rightCol = (nextX + tileSize - offset - 1) / tileSize;
-        int topRow = (nextY + offset) / tileSize;
+        int leftCol   = (nextX + offset) / tileSize;
+        int rightCol  = (nextX + tileSize - offset - 1) / tileSize;
+        int topRow    = (nextY + offset) / tileSize;
         int bottomRow = (nextY + tileSize - offset - 1) / tileSize;
 
         char[][] grid = model.getMap().getGrid();
 
-        if (leftCol < 0 || rightCol >= model.getMap().getCols() ||
-                topRow < 0 || bottomRow >= model.getMap().getRows()) {
+        // Giới hạn cứng: 19 cột (0-18), 21 hàng (0-20)
+        if (leftCol < 0 || rightCol >= 19 ||
+                topRow < 0 || bottomRow >= 21) {
             return false;
         }
 
@@ -131,6 +132,7 @@ public class GameController implements Runnable {
                 grid[bottomRow][leftCol] == 'X' || grid[bottomRow][rightCol] == 'X') {
             return false;
         }
+
         return true;
     }
 
@@ -154,26 +156,47 @@ public class GameController implements Runnable {
         }
     }
 
-    private void moveGhost(model.Ghost ghost) {
+    private void moveGhost(Ghost ghost) {
+        int tileSize = 32;
+
         int nextX = ghost.getX() + ghost.getDx() * ghost.getSpeed();
         int nextY = ghost.getY() + ghost.getDy() * ghost.getSpeed();
 
         if (canMove(nextX, nextY)) {
             ghost.move();
+
+            // Chỉ thử đổi hướng khi đang đứng đúng tâm tile
+            if (ghost.getX() % tileSize == 0 && ghost.getY() % tileSize == 0) {
+                changeGhostDirection(ghost);
+            }
+
         } else {
+            // Snap về tile trước đó (ngược hướng di chuyển)
+            if (ghost.getDx() != 0) {
+                ghost.setX((ghost.getX() / tileSize) * tileSize);
+            }
+            if (ghost.getDy() != 0) {
+                ghost.setY((ghost.getY() / tileSize) * tileSize);
+            }
             changeGhostDirection(ghost);
         }
     }
 
-    private void changeGhostDirection(model.Ghost ghost) {
+    private void changeGhostDirection(Ghost ghost) {
+        int tileSize = 32;
+
+        int baseX = (ghost.getX() / tileSize) * tileSize;
+        int baseY = (ghost.getY() / tileSize) * tileSize;
+
         int[][] directions = {{0, -1}, {0, 1}, {-1, 0}, {1, 0}};
         java.util.ArrayList<int[]> validMoves = new java.util.ArrayList<>();
 
         for (int[] dir : directions) {
             if (dir[0] == -ghost.getDx() && dir[1] == -ghost.getDy()) continue;
 
-            int testX = ghost.getX() + dir[0] * ghost.getSpeed();
-            int testY = ghost.getY() + dir[1] * ghost.getSpeed();
+            // ✅ Test bằng tileSize thay vì speed
+            int testX = baseX + dir[0] * tileSize;
+            int testY = baseY + dir[1] * tileSize;
 
             if (canMove(testX, testY)) {
                 validMoves.add(dir);

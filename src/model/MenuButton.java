@@ -65,17 +65,11 @@ public class MenuButton {
         }
     }
 
-    /**
-     * Kiểm tra xem tọa độ chuột có nằm trong vùng button không (vùng gốc, không scale).
-     */
     public boolean isClicked(int mouseX, int mouseY) {
         Rectangle bounds = new Rectangle(x, y, width, height);
         return bounds.contains(mouseX, mouseY);
     }
 
-    /**
-     * Kiểm tra xem chuột có đang hover trên button không.
-     */
     public boolean contains(int mouseX, int mouseY) {
         return mouseX >= x && mouseX <= x + width &&
                 mouseY >= y && mouseY <= y + height;
