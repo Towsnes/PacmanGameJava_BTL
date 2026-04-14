@@ -127,49 +127,35 @@ public class GameModel {
         startButtons.add(new MenuButton(63, 392, 110, 145, AssetManager.getInstance().getImage("level7"), "LEVEL7"));
         startButtons.add(new MenuButton(249, 392, 110, 145, AssetManager.getInstance().getImage("level8"), "LEVEL8"));
         startButtons.add(new MenuButton(437, 392, 110, 145, AssetManager.getInstance().getImage("level9"), "LEVEL9"));
-        startButtons.add(
-                new MenuButton(187, 581, 234, 69, AssetManager.getInstance().getImage("back_to_menu"), "BACK_TO_MENU"));
+        startButtons.add(new MenuButton(187, 581, 234, 69, AssetManager.getInstance().getImage("back_to_menu"), "BACK_TO_MENU"));
 
         // Menu Pause
-        pauseButtons.add(
-                new MenuButton(159, 212, 293, 112, AssetManager.getInstance().getImage("Resume Button"), "RESUME"));
-        pauseButtons.add(new MenuButton(121, 400, 132, 132, AssetManager.getInstance().getImage("Return Square Button"),
-                "RESTART"));
+        pauseButtons.add(new MenuButton(159, 212, 293, 112, AssetManager.getInstance().getImage("Resume Button"), "RESUME"));
+        pauseButtons.add(new MenuButton(121, 400, 132, 132, AssetManager.getInstance().getImage("Return Square Button"), "RESTART"));
         pauseButtons.add(new MenuButton(353, 421, 150, 90, AssetManager.getInstance().getImage("Menu Button"), "MENU"));
 
         // Quit Confirm
-        quitConfirmButtons
-                .add(new MenuButton(130, 350, 120, 120, AssetManager.getInstance().getImage("quit_yes"), "YES_QUIT"));
-        quitConfirmButtons
-                .add(new MenuButton(375, 350, 120, 120, AssetManager.getInstance().getImage("quit_no"), "NO_QUIT"));
+        quitConfirmButtons.add(new MenuButton(130, 350, 120, 120, AssetManager.getInstance().getImage("quit_yes"), "YES_QUIT"));
+        quitConfirmButtons.add(new MenuButton(375, 350, 120, 120, AssetManager.getInstance().getImage("quit_no"), "NO_QUIT"));
 
         // Controls
-        controlsButtons = new MenuButton(232, 461, 157, 91, AssetManager.getInstance().getImage("back"),
-                "BACK_TO_MENU");
+        controlsButtons = new MenuButton(232, 461, 157, 91, AssetManager.getInstance().getImage("back"), "BACK_TO_MENU");
 
         // Settings
-        settingsButtons
-                .add(new MenuButton(164, 293, 241, 152, AssetManager.getInstance().getImage("on_off"), "TOGGLE_SOUND"));
-        settingsButtons.add(new MenuButton(162, 464, 243, 154, AssetManager.getInstance().getImage("back_settings"),
-                "BACK_TO_MENU"));
+        settingsButtons.add(new MenuButton(164, 293, 241, 152, AssetManager.getInstance().getImage("on_off"), "TOGGLE_SOUND"));
+        settingsButtons.add(new MenuButton(162, 464, 243, 154, AssetManager.getInstance().getImage("back_settings"), "BACK_TO_MENU"));
 
         // GamePlay
-        gamePlayButtons.add(
-                new MenuButton(508, 10, 30, 30, AssetManager.getInstance().getImage("Pause Square Button"), "PAUSED"));
-        gamePlayButtons.add(new MenuButton(558, 10, 30, 30,
-                AssetManager.getInstance().getImage("Settings Square Button"), "SETTINGS"));
+        gamePlayButtons.add(new MenuButton(508, 10, 30, 30, AssetManager.getInstance().getImage("Pause Square Button"), "PAUSED"));
+        gamePlayButtons.add(new MenuButton(558, 10, 30, 30, AssetManager.getInstance().getImage("Settings Square Button"), "SETTINGS"));
 
         // GameOver
-        gameOverButtons.add(
-                new MenuButton(178, 372, 108, 45, AssetManager.getInstance().getImage("gameover_replay"), "RESTART"));
-        gameOverButtons
-                .add(new MenuButton(320, 372, 100, 45, AssetManager.getInstance().getImage("gameover_menu"), "MENU"));
+        gameOverButtons.add(new MenuButton(178, 372, 108, 45, AssetManager.getInstance().getImage("gameover_replay"), "RESTART"));
+        gameOverButtons.add(new MenuButton(320, 372, 100, 45, AssetManager.getInstance().getImage("gameover_menu"), "MENU"));
 
         // GameWon
-        gameWonButtons.add(
-                new MenuButton(188, 370, 100, 42, AssetManager.getInstance().getImage("gamewin_next"), "NEXT_LEVEL"));
-        gameWonButtons
-                .add(new MenuButton(318, 370, 92, 40, AssetManager.getInstance().getImage("gamewin_menu"), "MENU"));
+        gameWonButtons.add(new MenuButton(188, 370, 100, 42, AssetManager.getInstance().getImage("gamewin_next"), "NEXT_LEVEL"));
+        gameWonButtons.add(new MenuButton(318, 370, 92, 40, AssetManager.getInstance().getImage("gamewin_menu"), "MENU"));
     }
 
     public void setMap(Map map) {

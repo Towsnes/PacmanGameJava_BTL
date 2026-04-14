@@ -26,10 +26,6 @@ public class MenuButton {
         this.actionCommand = actionCommand;
     }
 
-    /**
-     * Cập nhật animation scale mỗi frame.
-     * Gọi trong game loop để tạo hiệu ứng mượt.
-     */
     public void updateHoverAnimation() {
         float targetScale = hovered ? HOVER_SCALE : 1.0f;
         if (currentScale < targetScale) {

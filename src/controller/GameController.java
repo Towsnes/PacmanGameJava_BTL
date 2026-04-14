@@ -18,6 +18,10 @@ public class GameController implements Runnable {
     private GameState previousState = null;
     private GameState stateBeforeSettings = null;
 
+    //Xet direction change pacman
+    private int bufferedDx = 0;
+    private int bufferedDy = 0;
+
     private Thread gameThread;
     private boolean isRunning = false;
     private final int FPS = 60;
@@ -81,32 +85,49 @@ public class GameController implements Runnable {
 
     private void update() {
         handleStateSound();
-
-        if (model.getCurrentState() != GameState.PLAYING) {
-            return;
-        }
-
-        if (model.isGameOver() || model.isGameWon()) {
-            return;
-        }
+        if (model.getCurrentState() != GameState.PLAYING || model.isGameOver() || model.isGameWon()) return;
 
         PacMan pacman = model.getPacman();
-        if (pacman != null) {
-            int nextX = pacman.getX() + pacman.getDx() * pacman.getSpeed();
-            int nextY = pacman.getY() + pacman.getDy() * pacman.getSpeed();
+        if (pacman == null) return;
 
-            if (canMove(nextX, nextY)) {
-                pacman.update();
-                checkEatCherry();
+        final int tileSize = 32;
+        // Kiểm tra xem Pac-Man có đang ở đúng ô lưới không
+        boolean onTileCenter = (pacman.getX() % tileSize == 0) && (pacman.getY() % tileSize == 0);
+
+        // Xử lý hướng dự định
+        if (bufferedDx != 0 || bufferedDy != 0) {
+            // Nếu quay đầu 180 độ -> Check canMove và cho phép quay luôn ở bất cứ đâu
+            if (bufferedDx == -pacman.getDx() && bufferedDy == -pacman.getDy()) {
+                if (canMove(pacman.getX() + bufferedDx * pacman.getSpeed(), pacman.getY() + bufferedDy * pacman.getSpeed())) {
+                    pacman.setDirection(bufferedDx, bufferedDy);
+                    bufferedDx = 0; bufferedDy = 0;
+                }
+            }
+            // Nếu rẽ 90 độ -> Chỉ cho rẽ khi đang ở đúng tâm ô và đường đó đi được
+            else if (onTileCenter) {
+                if (canMove(pacman.getX() + bufferedDx * pacman.getSpeed(), pacman.getY() + bufferedDy * pacman.getSpeed())) {
+                    pacman.setDirection(bufferedDx, bufferedDy);
+                    bufferedDx = 0; bufferedDy = 0;
+                }
             }
         }
 
+        // thực hiện di chuyển
+        int nextX = pacman.getX() + pacman.getDx() * pacman.getSpeed();
+        int nextY = pacman.getY() + pacman.getDy() * pacman.getSpeed();
+
+        if (canMove(nextX, nextY)) {
+            pacman.update();
+            checkEatCherry();
+        } else {
+            pacman.setX(((pacman.getX() + tileSize / 2) / tileSize) * tileSize);
+            pacman.setY(((pacman.getY() + tileSize / 2) / tileSize) * tileSize);
+            // Dừng di chuyển
+            pacman.setDirection(0, 0);
+        }
         if (model.getGhosts() != null) {
-            for (model.Ghost ghost : model.getGhosts()) {
-                moveGhost(ghost);
-            }
+            for (model.Ghost ghost : model.getGhosts()) moveGhost(ghost);
         }
-
         checkGhostCollision();
         checkWinCondition();
     }
@@ -194,7 +215,6 @@ public class GameController implements Runnable {
         for (int[] dir : directions) {
             if (dir[0] == -ghost.getDx() && dir[1] == -ghost.getDy()) continue;
 
-            // ✅ Test bằng tileSize thay vì speed
             int testX = baseX + dir[0] * tileSize;
             int testY = baseY + dir[1] * tileSize;
 
@@ -534,15 +554,14 @@ public class GameController implements Runnable {
         if (state == GameState.PLAYING) {
             PacMan pacman = model.getPacman();
             if (pacman == null) return;
-
-            if (key == java.awt.event.KeyEvent.VK_UP || key == java.awt.event.KeyEvent.VK_W) {
-                pacman.setDirection(0, -1);
-            } else if (key == java.awt.event.KeyEvent.VK_DOWN || key == java.awt.event.KeyEvent.VK_S) {
-                pacman.setDirection(0, 1);
-            } else if (key == java.awt.event.KeyEvent.VK_LEFT || key == java.awt.event.KeyEvent.VK_A) {
-                pacman.setDirection(-1, 0);
-            } else if (key == java.awt.event.KeyEvent.VK_RIGHT || key == java.awt.event.KeyEvent.VK_D) {
-                pacman.setDirection(1, 0);
+            if (key == KeyEvent.VK_UP || key == KeyEvent.VK_W) {
+                bufferedDx = 0;  bufferedDy = -1;
+            } else if (key == KeyEvent.VK_DOWN || key == KeyEvent.VK_S) {
+                bufferedDx = 0;  bufferedDy = 1;
+            } else if (key == KeyEvent.VK_LEFT || key == KeyEvent.VK_A) {
+                bufferedDx = -1; bufferedDy = 0;
+            } else if (key == KeyEvent.VK_RIGHT || key == KeyEvent.VK_D) {
+                bufferedDx = 1;  bufferedDy = 0;
             }
         }
     }
